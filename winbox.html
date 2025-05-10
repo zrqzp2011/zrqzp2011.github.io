@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Winbox - 强大的安卓模拟器</title>
+    <style>
+        :root {
+            --primary-color: #4285f4;
+            --secondary-color: #34a853;
+            --text-color: #333;
+            --bg-color: #f5f5f5;
+            --card-bg: #fff;
+            --nav-bg: #ffffff;
+            --border-color: #e0e0e0;
+        }
+
+        .dark-mode {
+            --primary-color: #8ab4f8;
+            --secondary-color: #81c995;
+            --text-color: #e0e0e0;
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --nav-bg: #1a1a1a;
+            --border-color: #333;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Android风格导航栏 */
+        nav {
+            background-color: var(--nav-bg);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            font-weight: bold;
+            font-size: 1.5rem;
+            color: var(--primary-color);
+        }
+
+        .logo img {
+            height: 30px;
+            margin-right: 10px;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+        }
+
+        .nav-links li {
+            margin-left: 25px;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-color);
+            font-weight: 500;
+            padding: 5px 0;
+            position: relative;
+        }
+
+        .nav-links a:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: var(--primary-color);
+            transition: width 0.3s;
+        }
+
+        .nav-links a:hover:after {
+            width: 100%;
+        }
+
+        .theme-toggle {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .theme-toggle:hover {
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+
+        .dark-mode .theme-toggle:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        /* 安卓风格卡片 */
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            padding: 25px;
+            margin: 30px 0;
+            border: 1px solid var(--border-color);
+        }
+
+        .hero {
+            text-align: center;
+            padding: 60px 0 40px;
+        }
+
+        .hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color: var(--primary-color);
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            max-width: 800px;
+            margin: 0 auto 30px;
+        }
+
+        .btn {
+            display: inline-block;
+            background-color: var(--primary-color);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            margin: 10px 5px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary-color);
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin: 40px 0;
+        }
+
+        .feature-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-color);
+        }
+
+        .feature-card i {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            display: inline-block;
+        }
+
+        .feature-card h3 {
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .screenshots {
+            margin: 50px 0;
+        }
+
+        .screenshot-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+
+        .screenshot {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-color);
+        }
+
+        .screenshot img {
+            width: 100%;
+            height: auto;
+            display: block;
+            transition: transform 0.3s;
+        }
+
+        .screenshot:hover img {
+            transform: scale(1.03);
+        }
+
+        footer {
+            background-color: var(--nav-bg);
+            padding: 30px 0;
+            text-align: center;
+            margin-top: 50px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            list-style: none;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .footer-links li {
+            margin: 0 15px;
+        }
+
+        .footer-links a {
+            color: var(--text-color);
+            text-decoration: none;
+        }
+
+        .copyright {
+            color: var(--text-color);
+            opacity: 0.8;
+            font-size: 0.9rem;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .nav-container {
+                flex-direction: column;
+                padding: 15px;
+            }
+
+            .logo {
+                margin-bottom: 15px;
+            }
+
+            .nav-links {
+                margin-top: 15px;
+            }
+
+            .nav-links li {
+                margin: 0 10px;
+            }
+
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .hero p {
+                font-size: 1rem;
+            }
+
+            .features {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 安卓风格浮动按钮 */
+        .fab {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            z-index: 99;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .fab:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        .fab i {
+            font-size: 1.5rem;
+        }
+
+        /* 安卓风格对话框效果 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 25px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            animation: modalFadeIn 0.3s;
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-color);
+        }
+
+        .modal-body {
+            margin-bottom: 20px;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        /* 安卓风格进度条 */
+        .progress-bar {
+            height: 4px;
+            background-color: rgba(0, 0, 0, 0.1);
+            border-radius: 2px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .dark-mode .progress-bar {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .progress {
+            height: 100%;
+            background-color: var(--primary-color);
+            width: 0;
+            transition: width 0.3s;
+        }
+
+        /* 安卓风格开关 */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary-color);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+
+<body>
+    <nav>
+        <div class="nav-container container">
+            <div class="logo">
+                <img src="https://via.placeholder.com/30x30" alt="Winbox Logo">
+                Winbox
+            </div>
+            <ul class="nav-links">
+                <li><a href="#features">功能特点</a></li>
+                <li><a href="#screenshots">截图展示</a></li>
+                <li><a href="#download">下载</a></li>
+                <li><a href="https://b23.tv/u4lZjYw" target="_blank">制作人员</a></li>
+            </ul>
+            <button class="theme-toggle" id="themeToggle">
+                <i class="fas fa-moon"></i>
+            </button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <section class="hero">
+            <div class="card">
+                <h1>Winbox - 强大的安卓模拟器</h1>
+                <p>Winbox是一款高性能的安卓模拟器，让您能在安卓设备上流畅运行Windows应用程序和游戏，带来前所未有的跨平台体验。</p>
+                <div>
+                    <a href="#download" class="btn">立即下载</a>
+                    <a href="#features" class="btn btn-secondary">了解更多</a>
+                </div>
+            </div>
+        </section>
+
+        <section id="features" class="features">
+            <div class="feature-card">
+                <i class="fas fa-tachometer-alt"></i>
+                <h3>卓越性能</h3>
+                <p>采用先进的虚拟化技术，提供接近原生Windows的性能体验，流畅运行各种应用程序和游戏。</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-gamepad"></i>
+                <h3>游戏优化</h3>
+                <p>专为游戏玩家优化，支持DirectX和OpenGL，让您的手游体验更上一层楼。</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-cog"></i>
+                <h3>高度可定制</h3>
+                <p>提供丰富的设置选项，可根据您的设备性能调整参数，获得最佳体验。</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-mobile-alt"></i>
+                <h3>多设备支持</h3>
+                <p>完美适配各种安卓设备，从手机到平板，从入门级到旗舰机型。</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-sync-alt"></i>
+                <h3>持续更新</h3>
+                <p>开发团队持续优化更新，不断添加新功能和改进性能。</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-shield-alt"></i>
+                <h3>安全可靠</h3>
+                <p>完全沙盒环境运行，不会影响您设备的系统安全和个人数据。</p>
+            </div>
+        </section>
+
+        <section id="screenshots" class="screenshots">
+            <div class="card">
+                <h2 style="text-align: center; margin-bottom: 20px;">截图展示</h2>
+                <div class="screenshot-grid">
+                    <div class="screenshot">
+                        <img src="https://via.placeholder.com/300x600" alt="Winbox截图1">
+                    </div>
+                    <div class="screenshot">
+                        <img src="https://via.placeholder.com/300x600" alt="Winbox截图2">
+                    </div>
+                    <div class="screenshot">
+                        <img src="https://via.placeholder.com/300x600" alt="Winbox截图3">
+                    </div>
+                    <div class="screenshot">
+                        <img src="https://via.placeholder.com/300x600" alt="Winbox截图4">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="download" class="download">
+            <div class="card">
+                <h2 style="text-align: center; margin-bottom: 20px;">下载Winbox</h2>
+                <div style="text-align: center;">
+                    <p style="margin-bottom: 20px;">选择适合您设备的版本下载</p>
+                    <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 15px;">
+                        <a href="#" class="btn">
+                            <i class="fab fa-android"></i> Android APK
+                        </a>
+                        <a href="#" class="btn btn-secondary">
+                            <i class="fas fa-download"></i> Windows版
+                        </a>
+                        <a href="#" class="btn">
+                            <i class="fab fa-apple"></i> macOS版
+                        </a>
+                    </div>
+                    <div style="margin-top: 30px;">
+                        <p>系统要求：Android 8.0及以上版本，至少4GB RAM</p>
+                        <p>当前版本：v1.2.3 | 更新日期：2023-06-15</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <footer>
+        <div class="container">
+            <div class="logo" style="justify-content: center; margin-bottom: 15px;">
+                <img src="https://via.placeholder.com/30x30" alt="Winbox Logo">
+                Winbox
+            </div>
+            <ul class="footer-links">
+                <li><a href="#features">功能</a></li>
+                <li><a href="#screenshots">截图</a></li>
+                <li><a href="#download">下载</a></li>
+                <li><a href="#">常见问题</a></li>
+                <li><a href="#">隐私政策</a></li>
+                <li><a href="#">服务条款</a></li>
+                <li><a href="https://b23.tv/u4lZjYw" target="_blank">关于我们</a></li>
+            </ul>
+            <div class="copyright">
+                &copy; 2023 Winbox Team. 保留所有权利。
+            </div>
+        </div>
+    </footer>
+
+    <div class="fab" id="contactFab">
+        <i class="fas fa-headset"></i>
+    </div>
+
+    <div class="modal" id="contactModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">联系我们</h3>
+                <button class="close-modal" id="closeModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>如有任何问题或建议，请通过以下方式联系我们：</p>
+                <ul style="margin-top: 15px; margin-left: 20px;">
+                    <li style="margin-bottom: 10px;">邮箱：support@winbox.example</li>
+                    <li style="margin-bottom: 10px;">QQ群：123456789</li>
+                    <li style="margin-bottom: 10px;">Telegram：@winbox_support</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" id="closeModalBtn">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 暗黑模式切换
+        const themeToggle = document.getElementById('themeToggle');
+        const body = document.body;
+        const icon = themeToggle.querySelector('i');
+
+        // 检查本地存储中的主题偏好
+        const currentTheme = localStorage.getItem('theme');
+        if (currentTheme === 'dark') {
+            body.classList.add('dark-mode');
+            icon.classList.replace('fa-moon', 'fa-sun');
+        }
+
+        themeToggle.addEventListener('click', () => {
+            body.classList.toggle('dark-mode');
+            
+            if (body.classList.contains('dark-mode')) {
+                icon.classList.replace('fa-moon', 'fa-sun');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                icon.classList.replace('fa-sun', 'fa-moon');
+                localStorage.setItem('theme', 'light');
+            }
+        });
+
+        // 模态框控制
+        const contactFab = document.getElementById('contactFab');
+        const contactModal = document.getElementById('contactModal');
+        const closeModal = document.getElementById('closeModal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+
+        contactFab.addEventListener('click', () => {
+            contactModal.style.display = 'flex';
+        });
+
+        closeModal.addEventListener('click', () => {
+            contactModal.style.display = 'none';
+        });
+
+        closeModalBtn.addEventListener('click', () => {
+            contactModal.style.display = 'none';
+        });
+
+        // 点击模态框外部关闭
+        window.addEventListener('click', (e) => {
+            if (e.target === contactModal) {
+                contactModal.style.display = 'none';
+            }
+        });
+
+        // 平滑滚动
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                if (this.getAttribute('href') === '#') return;
+                
+                e.preventDefault();
+                
+                const targetId = this.getAttribute('href');
+                if (targetId.startsWith('http')) return;
+                
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    targetElement.scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+
+        // 模拟进度条动画
+        window.addEventListener('load', () => {
+            const progressBars = document.querySelectorAll('.progress');
+            progressBars.forEach(bar => {
+                bar.style.width = bar.getAttribute('data-progress') || '75%';
+            });
+        });
+    </script>
+</body>
+
+</html>
