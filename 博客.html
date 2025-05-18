@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Termux Linux安装与Mobox配置指南</title>
+    <script src="https://cdn.tailwindcss.com/3.4.1"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .code-block {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: rgba(156, 163, 175, 0.1);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+        .dark .code-block {
+            background-color: rgba(31, 41, 55, 0.5);
+        }
+        .step-card {
+            transition: all 0.3s ease;
+        }
+        .step-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .dark .step-card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+        }
+        .step-number {
+            width: 2.5rem;
+            height: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 9999px;
+            font-weight: 600;
+            margin-right: 1rem;
+        }
+        /* 音乐控制按钮样式 */
+        #music-control {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 100;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: rgba(59, 130, 246, 0.8);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        #music-control:hover {
+            transform: scale(1.1);
+            background-color: rgba(59, 130, 246, 1);
+        }
+        .dark #music-control {
+            background-color: rgba(37, 99, 235, 0.8);
+        }
+        .dark #music-control:hover {
+            background-color: rgba(37, 99, 235, 1);
+        }
+        
+        /* 背景图片样式 */
+        body {
+            background-image: url('https://preview.qiantucdn.com/auto_machine/20210901/f808affb-958e-412a-85d2-8d31b3fa4779.jpg!w800');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+        }
+        
+        /* 内容区域半透明背景 */
+        .container {
+            background-color: rgba(255, 255, 255, 0.85);
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .dark .container {
+            background-color: rgba(17, 24, 39, 0.85);
+        }
+        
+        /* 状态栏样式 */
+        .status-bar {
+            background: linear-gradient(90deg, rgba(59,130,246,0.8) 0%, rgba(37,99,235,0.8) 100%);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .dark .status-bar {
+            background: linear-gradient(90deg, rgba(30,58,138,0.8) 0%, rgba(17,24,39,0.8) 100%);
+        }
+        .nav-tab {
+            transition: all 0.3s ease;
+        }
+        .nav-tab:hover {
+            background-color: rgba(255,255,255,0.2);
+        }
+    </style>
+</head>
+<body class="text-gray-800 dark:text-gray-200 transition-colors duration-300">
+    <!-- 背景音乐 (隐藏) -->
+    <audio id="bg-music" loop>
+        <source src="http://www.qeecc.com/plug/down.php?ac=music&id=d2d4eHN5eXNu&k=320kmp3" type="audio/mpeg">
+        您的浏览器不支持音频元素。
+    </audio>
+
+    <!-- 音乐控制按钮 -->
+    <div id="music-control" title="背景音乐控制">
+        <i class="fas fa-music"></i>
+    </div>
+
+    <!-- 状态栏 -->
+    <div class="status-bar sticky top-0 z-50 text-white py-3 px-6 flex justify-between items-center">
+        <div class="flex items-center space-x-2">
+            <i class="fas fa-terminal"></i>
+            <span class="font-bold">Termux指南</span>
+        </div>
+        <div class="hidden md:flex space-x-1">
+            <a href="#termux-install" class="nav-tab px-4 py-1 rounded-full">Termux安装</a>
+            <a href="#termux-usage" class="nav-tab px-4 py-1 rounded-full">Termux玩法</a>
+            <a href="#mobox-install" class="nav-tab px-4 py-1 rounded-full">Mobox安装</a>
+            <a href="#advanced" class="nav-tab px-4 py-1 rounded-full">进阶配置</a>
+        </div>
+        <div class="flex items-center space-x-4">
+            <button id="theme-toggle" class="p-1 rounded-full hover:bg-white/20">
+                <i class="fas fa-moon dark:hidden"></i>
+                <i class="fas fa-sun hidden dark:inline"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 py-8 max-w-6xl my-8">
+        <!-- 头部区域 -->
+        <header class="mb-12">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
+                    Termux Linux安装与Mobox配置指南
+                </h1>
+            </div>
+            <p class="text-lg text-gray-600 dark:text-gray-400">
+                本指南详细介绍在Termux中安装Linux系统、常见玩法以及配置Mobox Windows模拟器的完整步骤，包含准备工作、安装方法、后续配置和常见问题解决方案。
+            </p>
+        </header>
+
+        <!-- 主要内容区域 -->
+        <main>
+            <!-- Termux Linux安装部分 -->
+            <section id="termux-install" class="mb-16">
+                <div class="flex items-center mb-8">
+                    <div class="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center mr-4">
+                        <i class="fas fa-terminal text-blue-600 dark:text-blue-400 text-xl"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold">在Termux中安装Linux系统</h2>
+                </div>
+
+                <!-- 准备步骤 -->
+                <div class="mb-10">
+                    <div class="flex items-center mb-6">
+                        <div class="step-number bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                            01
+                        </div>
+                        <h3 class="text-xl font-semibold">准备工作</h3>
+                    </div>
+                    <div class="step-card bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md border border-gray-100 dark:border-gray-700">
+                        <ul class="space-y-4">
+                            <li class="flex items-start">
+                                <div class="flex-shrink-0 h-6 w-6 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center mr-3">
+                                    <i class="fas fa-check text-blue-500 dark:text-blue-400 text-xs"></i>
+                                </div>
+                                <div>
+                                    <p class="font-medium">安装Termux</p>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">推荐从F-Droid下载</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <div class="flex-shrink-0 h-6 w-6 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center mr-3">
+                                    <i class="fas fa-check text-blue-500 dark:text-blue-400 text-xs"></i>
+                                </div>
+                                <div>
+                                    <p class="font-medium">更新软件包</p>
+                                    <div class="code-block mt-1">
+                                        pkg update && pkg upgrade -y
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <div class="flex-shrink-0 h-6 w-6 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center mr-3">
+                                    <i class="fas fa-check text-blue-500 dark:text-blue-400 text-xs"></i>
+                                </div>
+                                <div>
+                                    <p class="font-medium">安装必要工具</p>
+                                    <div class="code-block mt-1">
+                                        pkg install curl wget git proot proot-distro -y
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 更换镜像源 -->
+                <div class="mb-10">
+                    <div class="flex items-center mb-6">
+                        <div class="step-number bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                            02
+                        </div>
+                        <h3 class="text-xl font-semibold">更换国内镜像源 (可选)</h3>
+                    </div>
+                    <div class="step-card bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md border border-gray-100 dark:border-gray-700">
+                        <p class="text-gray-600 dark:text-gray-400 mb-4">
+                            为加快下载速度（尤其在国内），可替换Termux默认源为清华镜像源:
+                        </p>
+                        <div class="code-block">
+                            echo -e "deb https://mirrors.tuna.tsinghua.edu.cn/termux/termux-packages-24 stable main" > $PREFIX/etc/apt/sources.list
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 安装方法 -->
+                <div class="mb-10">
+                    <h3 class="text-xl font-semibold mb-6 flex items-center">
+                        <i class="fas fa-download text-blue-500 mr-3"></i>
+                        <span>安装Linux系统</span>
+                    </h3>
+
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <!-- 方法一 -->
+                        <div class="step-card bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md border border-gray-100 dark:border-gray-700">
+                            <div class="flex items-center mb-4">
+                                <span class="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-3 py-1 rounded-full text-sm font-medium mr-3">
+                                    推荐
+                                </span>
+                                <h4 class="font-semibold">方法一：使用proot-distro</h4>
+                            </div>
+                            <ol class="list-decimal pl-5 space-y-3 text-gray-700 dark:text-gray-300">
+                                <li>查看可安装的Linux系统列表：<code class="bg-gray-100 dark:bg-gray-700 px-1 rounded">proot-distro list</code></li>
+                                <li>安装系统（以Ubuntu为例）：<code class="bg-gray-100 dark:bg-gray-700 px-1 rounded">proot-distro install ubuntu</code></li>
+                                <li>登录系统：<code class="bg-gray-100 dark:bg-gray-700 px-1 rounded">proot-distro login ubuntu --user root --shared-tmp --bind -l</code></li>
+                            </ol>
+                        </div>
+
+                        <!-- 方法二 -->
+                        <div class="step-card bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md border border-gray-100 dark:border-gray-700">
+                            <h4 class="font-semibold mb-4">方法二：手动安装</h4>
+                            <p class="text-gray-600 dark:text-gray-400 mb-4">
+                                手动下载rootfs并安装，适合高级用户
+                            </p>
+                            <div class="code-block">
+                                # 下载rootfs并安装
+                                wget https://example.com/linux-rootfs.tar.gz
+                                tar -xzf linux-rootfs.tar.gz -C ~/linux
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Termux常见玩法部分 -->
+            <section id="termux-usage" class="mb-16">
+                <div class="flex items-center mb-8">
+                    <div class="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center mr-4">
+                        <i class="fas fa-gamepad text-green-600 dark:text-green-400 text-xl"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold">Termux常见玩法</h2>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-6">
+                    <!-- 文件管理 -->
+                    <div class="step-card bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md border border-gray-100 dark:border-gray-700">
+                        <h3 class="font-semibold mb-3 flex items-center">
+                            <i class="fas fa-folder-open text-blue-500 mr-2"></i>
+                            <span>文件管理</span>
+                        </h3>
+                        <p class="text-gray-600 dark:text-gray-400 mb-3">
+                            使用基本命令管理文件和目录：
+                        </p>
+                        <div class="code-block">
+                            ls       # 列出目录内容
+                            cd       # 切换目录
+                            cp       # 复制文件
+                            mv       # 移动/重命名文件
+                            rm       # 删除文件
+                            mkdir    # 创建目录
+                        </div>
+                    </div>
+
+                    <!-- 编程与开发 -->
+                    <div class="step-card bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md border border-gray-100 dark:border-gray-700">
+                        <h3 class="font-semibold mb-3 flex items-center">
+                            <i class="fas fa-code text-blue-500 mr-2"></i>
+                            <span>编程与开发</span>
+                        </h3>
+                        <p class="text-gray-600 dark:text-gray-400 mb-3">
+                            支持多种编程语言环境：
+                        </p>
+                        <div class="code-block">
+                            # 安装Python
+                            pkg install python -y
+                            
+                            # 安装Node.js
+                            pkg install nodejs -y
+                            
+                            # 安装GCC编译器
+                            pkg install clang -y
+                        </div>
+                    </div>
+
+                    <!-- 远程访问 -->
+                    <div class="step-card bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md border border-gray-100 dark:border-gray-700">
+                        <h3 class="font-semibold mb-3 flex items-center">
+                            <i class="fas fa-server text-blue-500 mr-2"></i>
+                            <span>远程访问</span>
+                        </h3>
+                        <p class="text-gray-600 dark:text-gray-400 mb-3">
+                            配置SSH客户端连接远程服务器：
+                        </p>
+                        <div class="code-block">
+                            # 安装OpenSSH
+                            pkg install openssh -y
+                            
+                            # 连接到远程服务器
+                            ssh username@server_ip
+                        </div>
+                    </div>
+
+                    <!-- 渗透测试 -->
+                    <div class="step-card bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md border border-gray-100 dark:border-gray-700">
+                        <h3 class="font-semibold mb-3 flex items-center">
+                            <i class="fas fa-shield-alt text-blue-500 mr-2"></i>
+                            <span>渗透测试</span>
+                        </h3>
+                        <p class="text-gray-600 dark:text-gray-400 mb-3">
+                            安装渗透测试工具（仅用于合法测试）：
+                        </p>
+                        <div class="code-block">
+                            # 安装Nmap
+                            pkg install nmap -y
+                            
+                            # 扫描网络
+                            nmap -sV target_ip
+                        </div>
+                        <p class="text-sm text-red-500 dark:text-red-400 mt-2">
+                            ⚠️ 注意：仅用于授权的安全测试
+                        </p>
+                    </div>
+
+                    <!-- 个性化定制 -->
+                    <div class="step-card bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md border border-gray-100 dark:border-gray-700">
+                        <h3 class="font-semibold mb-3 flex items-center">
+                            <i class="fas fa-paint-brush text-blue-500 mr-2"></i>
+                            <span>个性化定制</span>
+                        </h3>
+                        <p class="text-gray-600 dark:text-gray-400 mb-3">
+                            美化Termux界面：
+                        </p>
+                        <div class="code-block">
+                            # 安装zsh和oh-my-zsh
+                            pkg install zsh -y
+                            sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+                            
+                            # 安装Powerlevel10k主题
+                            git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k
+                        </div>
+                    </div>
+
+                    <!-- 娱乐休闲 -->
+                    <div class="step-card bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md border border-gray-100 dark:border-gray-700">
+                        <h3 class="font-semibold mb-3 flex items-center">
+                            <i class="fas fa-smile text-blue-500 mr-2"></i>
+                            <span>娱乐休闲</span>
+                        </h3>
+                        <p class="text-gray-600 dark:text-gray-400 mb-3">
+                            安装有趣的终端程序：
+                        </p>
+                        <div class="code-block">
+                            # 安装娱乐程序
+                            pkg install cmatrix cowsay figlet -y
+                            
+                            # 运行数字雨效果
+                            cmatrix
+                            
+                            # 让奶牛说话
+                            cowsay "Hello Termux!"
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Mobox安装部分 -->
+            <section id="mobox-install" class="mb-16">
+                <div class="flex items-center mb-8">
+                    <div class="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center mr-4">
+                        <i class="fas fa-windows text-purple-600 dark:text-purple-400 text-xl"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold">Mobox Windows模拟器安装</h2>
+                </div>
+
+                <div class="mb-10">
+                    <div class="flex items-center mb-6">
+                        <div class="step-number bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+                            01
+                        </div>
+                        <h3 class="text-xl font-semibold">安装准备</h3>
+                    </div>
+                    <div class="step-card bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md border border-gray-100 dark:border-gray-700">
+                        <p class="text-gray-600 dark:text-gray-400 mb-4">
+                            Mobox是基于Box86/Box64和Wine的Android Windows模拟器，需要先安装Termux和Linux系统。
+                        </p>
+                        <div class="code-block">
+                            # 确保已安装必要依赖
+                            pkg install x11-repo -y
+                            pkg install proot git wget -y
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-10">
+                    <div class="flex items-center mb-6">
+                        <div class="step-number bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+                            02
+                        </div>
+                        <h3 class="text-xl font-semibold">安装Mobox</h3>
+                    </div>
+                    <div class="step-card bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md border border-gray-100 dark:border-gray-700">
+                        <p class="text-gray-600 dark:text-gray-400 mb-4">
+                            使用一键安装脚本：
+                        </p>
+                        <div class="code-block">
+                            # 下载安装脚本
+                            wget https://raw.githubusercontent.com/termux-lab/mobox/main/install.sh
+                            
+                            # 赋予执行权限并运行
+                            chmod +x install.sh
+                            ./install.sh
+                        </div>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-3">
+                            安装过程可能需要较长时间，请耐心等待
+                        </p>
+                    </div>
+                </div>
+
+                <div class="mb-10">
+                    <div class="flex items-center mb-6">
+                        <div class="step-number bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+                            03
+                        </div>
+                        <h3 class="text-xl font-semibold">运行Mobox</h3>
+                    </div>
+                    <div class="step-card bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md border border-gray-100 dark:border-gray-700">
+                        <p class="text-gray-600 dark:text-gray-400 mb-4">
+                            安装完成后启动Mobox：
+                        </p>
+                        <div class="code-block">
+                            # 启动Mobox
+                            mobox
+                            
+                            # 首次启动会下载Wine组件
+                            # 完成后会自动进入Windows环境
+                        </div>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-3">
+                            首次启动需要下载约1GB数据，建议在WiFi环境下进行
+                        </p>
+                    </div>
+                </div>
+
+                <div class="mb-10">
+                    <div class="flex items-center mb-6">
+                        <div class="step-number bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+                            04
+                        </div>
+                        <h3 class="text-xl font-semibold">安装Windows应用</h3>
+                    </div>
+                    <div class="step-card bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md border border-gray-100 dark:border-gray-700">
+                        <p class="text-gray-600 dark:text-gray-400 mb-4">
+                            在Mobox环境中安装Windows应用：
+                        </p>
+                        <div class="code-block">
+                            # 在Mobox终端中执行
+                            wine notepad.exe  # 运行记事本
+                            wine app.exe    # 运行其他应用
+                        </div>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-3">
+                            部分应用可能需要额外依赖，请参考具体应用的安装说明
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 进阶配置部分 -->
+            <section id="advanced" class="mb-16">
+                <div class="flex items-center mb-8">
+                    <div class="w-12 h-12 rounded-full bg-yellow-100 dark:bg-yellow-900 flex items-center justify-center mr-4">
+                        <i class="fas fa-cogs text-yellow-600 dark:text-yellow-400 text-xl"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold">进阶配置</h2>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-6">
+                    <!-- GPU加速 -->
+                    <div class="step-card bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md border border-gray-100 dark:border-gray-700">
+                        <h3 class="font-semibold mb-3 flex items-center">
+                            <i class="fas fa-rocket text-blue-500 mr-2"></i>
+                            <span>GPU加速</span>
+                        </h3>
+                        <p class="text-gray-600 dark:text-gray-400 mb-3">
+                            启用VirGL渲染器提升图形性能：
+                        </p>
+                        <div class="code-block">
+                            # 安装VirGL渲染器
+                            pkg install virglrenderer-android -y
+                            
+                            # 设置环境变量
+                            export GALLIUM_DRIVER=virpipe
+                            export MESA_GL_VERSION_OVERRIDE=3.3
+                        </div>
+                    </div>
+
+                    <!-- 声音配置 -->
+                    <div class="step-card bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md border border-gray-100 dark:border-gray-700">
+                        <h3 class="font-semibold mb-3 flex items-center">
+                            <i class="fas fa-volume-up text-blue-500 mr-2"></i>
+                            <span>声音配置</span>
+                        </h3>
+                        <p class="text-gray-600 dark:text-gray-400 mb-3">
+                            配置PulseAudio音频服务：
+                        </p>
+                        <div class="code-block">
+                            # 安装PulseAudio
+                            pkg install pulseaudio -y
+                            
+                            # 启动音频服务
+                            pulseaudio --start --exit-idle-time=-1
+                            
+                            # 设置环境变量
+                            export PULSE_SERVER=127.0.0.1
+                        </div>
+                    </div>
+
+                    <!-- 网络配置 -->
+                    <div class="step-card bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md border border-gray-100 dark:border-gray-700">
+                        <h3 class="font-semibold mb-3 flex items-center">
+                            <i class="fas fa-network-wired text-blue-500 mr-2"></i>
+                            <span>网络配置</span>
+                        </h3>
+                        <p class="text-gray-600 dark:text-gray-400 mb-3">
+                            优化网络设置：
+                        </p>
+                        <div class="code-block">
+                            # 安装网络工具
+                            pkg install net-tools -y
+                            
+                            # 查看网络接口
+                            ifconfig
+                            
+                            # 测试网络连接
+                            ping google.com
+                        </div>
+                    </div>
+
+                    <!-- 存储优化 -->
+                    <div class="step-card bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md border border-gray-100 dark:border-gray-700">
+                        <h3 class="font-semibold mb-3 flex items-center">
+                            <i class="fas fa-hdd text-blue-500 mr-2"></i>
+                            <span>存储优化</span>
+                        </h3>
+                        <p class="text-gray-600 dark:text-gray-400 mb-3">
+                            管理存储空间：
+                        </p>
+                        <div class="code-block">
+                            # 查看磁盘使用情况
+                            df -h
+                            
+                            # 清理缓存
+                            pkg clean
+                            
+                            # 删除无用包
+                            pkg autoclean
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- 页脚 -->
+        <footer class="mt-12 pt-6 border-t border-gray-200 dark:border-gray-700">
+            <div class="text-center text-gray-500 dark:text-gray-400 text-sm">
+                <p class="mb-4">© 2023 Termux指南 - 所有权利保留</p>
+                <p class="mb-4">
+                    <a href="https://b23.tv/37XXiQT" class="text-blue-500 hover:underline" target="_blank">网站维护中，点击查看最新动态</a>
+                </p>
+                <p>本网站内容仅供参考，使用工具请遵守相关法律法规</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // 主题切换
+        const themeToggle = document.getElementById('theme-toggle');
+        const html = document.documentElement;
+        
+        // 检查本地存储中的主题偏好
+        if (localStorage.getItem('theme') === 'dark') {
+            html.classList.add('dark');
+        }
+        
+        themeToggle.addEventListener('click', () => {
+            html.classList.toggle('dark');
+            localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
+        });
+        
+        // 音乐控制
+        const musicControl = document.getElementById('music-control');
+        const bgMusic = document.getElementById('bg-music');
+        let isPlaying = false;
+        
+        musicControl.addEventListener('click', () => {
+            if (isPlaying) {
+                bgMusic.pause();
+                musicControl.innerHTML = '<i class="fas fa-music"></i>';
+            } else {
+                bgMusic.play().catch(e => {
+                    console.error("播放失败:", e);
+                    alert("音乐播放失败，可能是由于浏览器限制或链接失效");
+                });
+                musicControl.innerHTML = '<i class="fas fa-pause"></i>';
+            }
+            isPlaying = !isPlaying;
+        });
+        
+        // 平滑滚动
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                if (this.getAttribute('href') === '#') return;
+                
+                e.preventDefault();
+                
+                const targetId = this.getAttribute('href');
+                if (targetId.startsWith('http')) return;
+                
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    targetElement.scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
